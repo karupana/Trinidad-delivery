@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -8,85 +7,54 @@
 
   <!-- CSS: controls how the page LOOKS -->
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      max-width: 600px;
-      margin: 0 auto;
-      padding: 16px;
-      background: #fafafa;
-    }
-
-    h1 {
-      color: #d35400;
-    }
-
-    .item {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      background: white;
-      padding: 12px;
-      margin-bottom: 10px;
-      border-radius: 8px;
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-    }
-
-    .pic {
-      font-size: 40px;
-    }
-
-    /* emoji stands in for a photo for now */
-    .info {
-      flex: 1;
-    }
-
-    .price {
-      color: #555;
-    }
-
-    button {
-      background: #d35400;
-      color: white;
-      border: none;
-      padding: 8px 14px;
-      border-radius: 6px;
-      cursor: pointer;
-    }
-
-    #cart {
-      background: white;
-      padding: 12px;
-      border-radius: 8px;
-      margin-top: 20px;
-    }
+    body { font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 16px; background: #fafafa; }
+    h1 { color: #d35400; }
+    .item { display: flex; align-items: center; gap: 12px; background: white; padding: 12px; margin-bottom: 10px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+    .pic { font-size: 40px; }
+    .info { flex: 1; }
+    .price { color: #555; }
+    button { background: #d35400; color: white; border: none; padding: 8px 14px; border-radius: 6px; cursor: pointer; }
+    #cart { background: white; padding: 12px; border-radius: 8px; margin-top: 20px; }
+    input, textarea { width: 100%; box-sizing: border-box; padding: 10px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 16px; font-family: inherit; }
+    #order-btn { width: 100%; background: #25d366; font-size: 16px; padding: 12px; }
+    #error { color: #c0392b; margin: 0 0 10px; }
   </style>
 </head>
-
 <body>
 
   <!-- HTML: the STRUCTURE and content of the page -->
-  <h1>Aamritha Restaurant</h1>
-  <div id="menu"></div> <!-- JavaScript will fill this in -->
+  <h1>Bagalito Enterprise - Menu</h1>
+  <div id="menu"></div>   <!-- JavaScript will fill this in -->
 
   <div id="cart">
     <h2>Your Order</h2>
     <div id="cart-items">Cart is empty</div>
     <p><strong>Total: TT$<span id="total">0</span></strong></p>
+
+    <input id="cust-name" type="text" placeholder="Your name">
+    <input id="cust-phone" type="tel" placeholder="Your phone number">
+    <textarea id="cust-address" rows="2" placeholder="Delivery address"></textarea>
+    <p id="error"></p>
+    <button id="order-btn" onclick="sendOrder()">Order via WhatsApp</button>
   </div>
 
   <!-- JavaScript: the BEHAVIOUR (what happens when you click) -->
   <script>
+    // >>> CHANGE THIS to the restaurant's WhatsApp number.
+    // Format: country code + number, digits only. Trinidad = 1868 + 7 digits.
+    const WHATSAPP_NUMBER = "18687094084";
+
     // 1. The menu is just a list of items. Edit this to change the menu.
     const menu = [
-      { id: 1, name: "Doubles", price: 8, pic: "🌮" },
-      { id: 2, name: "Chicken Roti", price: 35, pic: "🌯" },
+      { id: 1, name: "Doubles",       price: 8,  pic: "🌮" },
+      { id: 2, name: "Chicken Roti",  price: 35, pic: "🌯" },
       { id: 3, name: "Chicken Pelau", price: 45, pic: "🍚" },
-      { id: 4, name: "Sorrel Drink", price: 12, pic: "🥤" },
-      { id: 5, name: "Lime Juice", price: 10, pic: "🍹" }
+      { id: 4, name: "Sorrel Drink",  price: 12, pic: "🥤" },
+      { id: 5, name: "Lime Juice",    price: 10, pic: "🍹" }
     ];
 
     // 2. The cart starts empty. It remembers how many of each item.
-    let cart = {};   // example later: { 1: 2, 3: 1 } means 2 doubles, 1 pelau
+    let cart = {};   // example: { 1: 2, 3: 1 } means 2 doubles, 1 pelau
 
     // 3. Draw the menu on the page
     function showMenu() {
@@ -108,41 +76,69 @@
 
     // 4. Runs when you click "Add"
     function addToCart(id) {
-      cart[id] = (cart[id] || 0) + 1;   // add 1 (start from 0 if not in cart yet)
+      cart[id] = (cart[id] || 0) + 1;
       showCart();
     }
 
-    // 4.1 Runs when you click "Removed"
+    // 4.1 Runs when you click "Remove"
     function removeFromCart(id) {
       if (cart[id]) {
-        cart[id] -= 1;   // remove 1
+        cart[id] -= 1;
         if (cart[id] <= 0) {
-          delete cart[id];   // remove from cart if quantity is 0
+          delete cart[id];
         }
         showCart();
       }
     }
 
-
-    // 5. Draw the cart and calculate the total
-    function showCart() {
-      let html = "";
+    // 5. Work out the total price of the cart
+    function getTotal() {
       let total = 0;
       for (const id in cart) {
         const item = menu.find(m => m.id == id);
-        const lineTotal = item.price * cart[id];
-        total += lineTotal;
-        html += `<p>${cart[id]} x ${item.name} = TT$${lineTotal}</p>`;
+        total += item.price * cart[id];
+      }
+      return total;
+    }
+
+    // 6. Draw the cart on the page
+    function showCart() {
+      let html = "";
+      for (const id in cart) {
+        const item = menu.find(m => m.id == id);
+        html += `<p>${cart[id]} x ${item.name} = TT$${item.price * cart[id]}</p>`;
       }
       document.getElementById("cart-items").innerHTML = html || "Cart is empty";
-      document.getElementById("total").textContent = total;
+      document.getElementById("total").textContent = getTotal();
     }
-    function clearCart() {
-      cart = {};
-      showCart();
+
+    // 7. Build the WhatsApp message and open WhatsApp
+    function sendOrder() {
+      const name = document.getElementById("cust-name").value.trim();
+      const phone = document.getElementById("cust-phone").value.trim();
+      const address = document.getElementById("cust-address").value.trim();
+      const error = document.getElementById("error");
+
+      // Check everything is filled in before sending
+      if (Object.keys(cart).length === 0) { error.textContent = "Please add at least one item."; return; }
+      if (!name || !phone || !address) { error.textContent = "Please fill in your name, phone and address."; return; }
+      error.textContent = "";
+
+      let message = "New order\n\n";
+      for (const id in cart) {
+        const item = menu.find(m => m.id == id);
+        message += `${cart[id]} x ${item.name} = TT$${item.price * cart[id]}\n`;
+      }
+      message += `\nTotal: TT$${getTotal()}\n`;
+      message += `\nName: ${name}\nPhone: ${phone}\nAddress: ${address}\n`;
+      message += `Payment: Cash on delivery`;
+
+      // encodeURIComponent makes the text safe to put inside a web link
+      const url = "https://wa.me/" + WHATSAPP_NUMBER + "?text=" + encodeURIComponent(message);
+      window.open(url, "_blank");
     }
+
     showMenu();   // run once when the page loads
   </script>
 </body>
-
 </html>

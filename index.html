@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Bagalito Enterprise - Menu</title>
+
+  <!-- CSS: controls how the page LOOKS -->
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 16px;
+      background: #fafafa;
+    }
+
+    h1 {
+      color: #d35400;
+    }
+
+    .item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: white;
+      padding: 12px;
+      margin-bottom: 10px;
+      border-radius: 8px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    .pic {
+      font-size: 40px;
+    }
+
+    /* emoji stands in for a photo for now */
+    .info {
+      flex: 1;
+    }
+
+    .price {
+      color: #555;
+    }
+
+    button {
+      background: #d35400;
+      color: white;
+      border: none;
+      padding: 8px 14px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    #cart {
+      background: white;
+      padding: 12px;
+      border-radius: 8px;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- HTML: the STRUCTURE and content of the page -->
+  <h1>Aamritha Restaurant</h1>
+  <div id="menu"></div> <!-- JavaScript will fill this in -->
+
+  <div id="cart">
+    <h2>Your Order</h2>
+    <div id="cart-items">Cart is empty</div>
+    <p><strong>Total: TT$<span id="total">0</span></strong></p>
+  </div>
+
+  <!-- JavaScript: the BEHAVIOUR (what happens when you click) -->
+  <script>
+    // 1. The menu is just a list of items. Edit this to change the menu.
+    const menu = [
+      { id: 1, name: "Doubles", price: 8, pic: "🌮" },
+      { id: 2, name: "Chicken Roti", price: 35, pic: "🌯" },
+      { id: 3, name: "Chicken Pelau", price: 45, pic: "🍚" },
+      { id: 4, name: "Sorrel Drink", price: 12, pic: "🥤" },
+      { id: 5, name: "Lime Juice", price: 10, pic: "🍹" }
+    ];
+
+    // 2. The cart starts empty. It remembers how many of each item.
+    let cart = {};   // example later: { 1: 2, 3: 1 } means 2 doubles, 1 pelau
+
+    // 3. Draw the menu on the page
+    function showMenu() {
+      let html = "";
+      for (const item of menu) {
+        html += `
+          <div class="item">
+            <div class="pic">${item.pic}</div>
+            <div class="info">
+              <strong>${item.name}</strong><br>
+              <span class="price">TT$${item.price}</span>
+            </div>
+            <button onclick="addToCart(${item.id})">Add</button>
+            <button onclick="removeFromCart(${item.id})">Remove</button>
+          </div>`;
+      }
+      document.getElementById("menu").innerHTML = html;
+    }
+
+    // 4. Runs when you click "Add"
+    function addToCart(id) {
+      cart[id] = (cart[id] || 0) + 1;   // add 1 (start from 0 if not in cart yet)
+      showCart();
+    }
+
+    // 4.1 Runs when you click "Removed"
+    function removeFromCart(id) {
+      if (cart[id]) {
+        cart[id] -= 1;   // remove 1
+        if (cart[id] <= 0) {
+          delete cart[id];   // remove from cart if quantity is 0
+        }
+        showCart();
+      }
+    }
+
+
+    // 5. Draw the cart and calculate the total
+    function showCart() {
+      let html = "";
+      let total = 0;
+      for (const id in cart) {
+        const item = menu.find(m => m.id == id);
+        const lineTotal = item.price * cart[id];
+        total += lineTotal;
+        html += `<p>${cart[id]} x ${item.name} = TT$${lineTotal}</p>`;
+      }
+      document.getElementById("cart-items").innerHTML = html || "Cart is empty";
+      document.getElementById("total").textContent = total;
+    }
+    function clearCart() {
+      cart = {};
+      showCart();
+    }
+    showMenu();   // run once when the page loads
+  </script>
+</body>
+
+</html>
